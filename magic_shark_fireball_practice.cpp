@@ -1,4 +1,4 @@
-#include <iostream>
+ #include <iostream>
 #include <vector>
 #include <algorithm>
 
@@ -28,6 +28,47 @@ void move(){
     fvect.clear();
 }
 
+void merge(){
+    for (int i = 0; i < N; i++){
+        for (int j = 0; j < N; j++){
+            auto &grid = cell[i][j];
+            int gridsize = grid.size();
+
+            if(gridsize == 0) continue;
+            else if (gridsize == 1){
+                fvect.push_back(grid[0]);
+            }
+            else {
+                long long sum_m = 0, sum_s = 0;
+                int even = 0, odd = 0;
+
+                for(auto &f : grid){
+                    sum_m += f.m;
+                    sum_s += f.s;
+
+                    if(f.d%2 == 0){
+                        even++;
+                    }
+                    else {
+                        odd++;
+                    }
+                }
+
+                int nm = sum_m/5;
+                if(nm == 0) continue;
+
+                int ns = sum_s/gridsize;
+                for(int k = 0; k < 4; k++){
+                    if(even == gridsize || odd == gridsize){
+                        fvect.push_back({i, j, nm, ns, k*2});
+                    }
+                    else fvect.push_back({i, j, nm, ns, k*2+1});
+                }
+            }
+        }
+    }
+}
+
 int main(){
     ios::sync_with_stdio(false);
     cin.tie(NULL);
@@ -45,15 +86,27 @@ int main(){
         fvect.push_back({r-1, c-1, m, s, d});
     }
 
-    move();
-
-    for(auto &f: fvect){
-        cout << f.r << " / " << f.c << " / " << f.m << " / " << f.s << " / " << f.d;
+    for(int j = 0; j < K; j++){
+        move();
+        merge();
     }
+
+    long long answer = 0;
+    for(auto &f : fvect){
+        answer += f.m;
+    }
+    
+    cout << answer << endl;
     
     return 0;
 }
 
 /*  freopen("input.txt", "r", stdin);
     freopen("output.txt", "w", stdout);
+    cout << f.r << "/" << f.c << "/ 질량 : " << f.m << "/ 속도 : " << f.s << "/ 방향 : " << f.d << "/" << nx << "/" << ny << endl;
+    4 2 1
+    1 1 5 2 2
+    1 4 7 1 6
+
+    8
     */
