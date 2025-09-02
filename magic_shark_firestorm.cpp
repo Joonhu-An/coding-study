@@ -1,4 +1,7 @@
-/* 마법사 상어는 파이어볼과 토네이도를 조합해 파이어스톰을 시전할 수 있다. 오늘은 파이어스톰을 크기가 2^N × 2^N인 격자로 나누어진 얼음판에서 연습하려고 한다. 
+/* 
+https://www.acmicpc.net/problem/20058
+
+마법사 상어는 파이어볼과 토네이도를 조합해 파이어스톰을 시전할 수 있다. 오늘은 파이어스톰을 크기가 2^N × 2^N인 격자로 나누어진 얼음판에서 연습하려고 한다. 
 위치 (r, c)는 격자의 r행 c열을 의미하고, A[r][c]는 (r, c)에 있는 얼음의 양을 의미한다. A[r][c]가 0인 경우 얼음이 없는 것이다.
 
 파이어스톰을 시전하려면 시전할 때마다 단계 L을 결정해야 한다. 파이어스톰은 먼저 격자를 2^L × 2^L 크기의 부분 격자로 나눈다. 
@@ -30,7 +33,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <cmath>
+#include <queue>
 
 using namespace std;
 
@@ -42,25 +45,114 @@ int dy[4] = {0, 1, 0, -1};
 int map[64][64];
 int rot_map[64][64];
 bool visited[64][64];
+int lessthree[64][64];
+
+queue<pair<int, int>> q;
 
 void rotation(int r){
-    int size = (int)pow(2,r);
-    int total = (int)pow(2,N);
 
-    for (int sy = 0; sy < total; sy += size) {
-        for (int sx = 0; sx < total; sx += size) {
+    int size = 1 << r;
+    int total = 1 << N;
+    int point = size / 2;
 
-            // 블록 내부 회전
-            for (int y = 0; y < size; y++) {
-                for (int x = 0; x < size; x++) {
-                    // 시계 90도 회전 공식
-                    rot_map[sy + x][sx + size - 1 - y] = map[sy + y][sx + x];
+    for (int sx = 0; sx < total; sx += size) {
+        for (int sy = 0; sy < total; sy += size) {
+
+            for (int x = 0; x < size; x++) {
+                for (int y = 0; y < size; y++) {
+                    rot_map[sx + y][sy + size - 1 - x] = map[sx + x][sy + y];
                 }
             }
+        }
+    }    
 
+
+
+    for(int i = 0; i < total; i++){
+        for (int j = 0; j < total; j++){
+            map[i][j] = rot_map[i][j];
+        }
+    }    
+}
+
+void check(int x, int y){
+    int near = 0;
+
+    for(int i = 0; i < 4; i++){
+        int nx = x + dx[i];
+        int ny = y + dy[i];
+
+        if(nx >= 0 && ny >= 0 && nx < 1<<N && ny < 1<<N){
+            if (map[nx][ny] > 0){
+                near++;
+            }
+        }
+    }
+
+    if(near >= 3){
+        visited[x][y] = true;
+    }
+}
+
+void melt(){
+    for(int i = 0; i < (1<<N); i++){
+            for (int j = 0; j < (1<<N); j++){
+                if(map[i][j] == 0){
+                    continue;
+                }
+                else if(!visited[i][j]){
+                    map[i][j] -= 1;
+                }
         }
     }
 }
+
+int counting(){
+    int ice_sum = 0;
+
+    for(int i = 0; i < (1<<N); i++){
+            for (int j = 0; j < (1<<N); j++){
+                    ice_sum += map[i][j];
+        }
+    }
+
+    return ice_sum;
+}
+
+int howBig(int x, int y){
+    int maximum = 0;
+
+    if(map[x][y] != 0){
+        maximum++;
+    }
+
+    if(!visited[x][y]){
+        q.push({x,y});
+        visited[x][y] = true;
+    
+        while(!q.empty()){
+            int cx = q.front().first;
+            int cy = q.front().second;
+            q.pop();
+
+            for(int i = 0; i < 4; i++){
+                int nx = cx + dx[i];
+                int ny = cy + dy[i];
+
+                if(nx >= 0 && ny >= 0 && nx < 1<<N && ny < 1<<N){
+                    if (map[nx][ny] > 0 && !visited[nx][ny]){
+                        maximum++;
+                        visited[nx][ny] = true;
+                        q.push({nx,ny});
+                    }
+                }
+            }
+        }
+    }
+    
+    return maximum;
+}
+
 
 int main(){
     ios::sync_with_stdio(false);
@@ -72,8 +164,8 @@ int main(){
 
     cin >> N >> Q;
 
-    for(int i = 0; i < pow(2,N); i++){
-        for (int j = 0; j < pow(2,N); j++){
+    for(int i = 0; i < (1<<N); i++){
+        for (int j = 0; j < (1<<N); j++){
             cin >> map[i][j];
         }
     }
@@ -82,8 +174,50 @@ int main(){
     
     for(int k = 0; k < Q; k++){
         cin >> rotate[k];
-        cout << rotate[k];
     }
 
+    for(int l = 0; l < Q; l++){
+        rotation(rotate[l]);
+        
+        fill(&visited[0][0], &visited[0][0] + 64*64, false);
+
+        for(int i = 0; i < (1<<N); i++){
+            for (int j = 0; j < (1<<N); j++){
+                if(map[i][j] != 0){
+                    check(i, j);
+                }
+            }
+        }
+
+        melt();  
+    }
+
+    int size_big = 0;
+
+    fill(&visited[0][0], &visited[0][0] + 64*64, false);
+
+    for(int i = 0; i < (1<<N); i++){
+            for (int j = 0; j < (1<<N); j++){
+                    size_big = max(size_big, howBig(i,j));
+        }
+    }  
+
+    int sum_answer;
+    sum_answer = counting();
+    cout << sum_answer << endl;
+    cout << size_big << endl;
+
+    return 0;
 }
 
+
+/*
+for(int i = 0; i < (1<<N); i++){
+            for (int j = 0; j < (1<<N); j++){
+                cout << lessthree[i][j] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+
+        */
