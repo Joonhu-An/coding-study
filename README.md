@@ -67,6 +67,52 @@ magic_shark_fireball에서도
 (보통은 문제에서 제한을 걸지만, 해당 문제보면 s가 1000이라서 direction이 음수라면 순식간에 좌표 이탈함)
 따라서 % N을 통해서 값을 정리해줘야 안정적으로 맵 안에 위치 할 수 있음. 이후 % N이나, + N 등 작업을 통해 음수 좌표가 안 나오도록 정리
 
+조합
+ 방법 1: next_permutation으로 조합 만들기
+
+선택 여부를 나타내는 배열을 만듭니다.
+예: 1 1 0 0 0 → 2개 선택 (앞의 2개 뽑음)
+
+이 배열을 next_permutation으로 돌리면, 모든 선택 경우가 나옵니다.
+
+선택된 원소만 출력하면 됩니다.
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    vector<int> arr = {1, 2, 3, 4, 5};
+    vector<int> mask = {1, 1, 0, 0, 0}; // 2개 뽑기
+
+    do {
+        for (int i = 0; i < 5; i++) {
+            if (mask[i]) cout << arr[i] << " ";
+        }
+        cout << "\n";
+    } while (prev_permutation(mask.begin(), mask.end())); 
+    // prev_permutation 사용해야 사전순으로 조합이 나옴
+}
+
+순열
+ 🔹 방법 2: next_permutation으로 순열(나열) 만들기
+
+만약 순서까지 고려해서 (즉, (1,2)와 (2,1) 모두 출력) 하고 싶다면,
+그냥 5개 원소 전체 순열을 구하고, 앞의 2개만 출력하면 됩니다.
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    vector<int> arr = {1, 2, 3, 4, 5};
+
+    do {
+        cout << arr[0] << " " << arr[1] << "\n"; // 앞 2개만 출력
+    } while (next_permutation(arr.begin(), arr.end()));
+}
 
 ----------------------------------------------------------------------------------------------------
 🟦 비슷한 난이도 (골드4~골드3)
