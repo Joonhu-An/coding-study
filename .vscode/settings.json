@@ -6,6 +6,8 @@
         "xutility": "cpp",
         "queue": "cpp",
         "numeric": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "algorithm": "cpp",
+        "utility": "cpp"
     }
 }
