@@ -13,12 +13,12 @@ using namespace std;
 
 int K;
 char grid[500][500];
-char tmp[500][500];
-bool start = false;
+char grid_rot[500][500];
+bool visited[500][500][4];
 
 struct Axis{
-    int x, y, t, rot;
-    pair<int, int> plate;
+    int x, y, rot, dist;
+    bool reset;
 };
 
 int dx[5] = {-1, 1, 0, 0, 0};
@@ -26,125 +26,104 @@ int dy[5] = {0, 0, -1, 1, 0};
 
 queue<Axis> q;
 
-pair<int, int> rotation90(int x, int y){
-    int pl_x, pl_y, keep;
-    pl_x = x/4;
-    pl_y = y/4;
-
-    int sx = pl_x * 4;
-    int sy = pl_y * 4;
-
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            int nx = j;
-            int ny = 4 - 1- i;
-
-            tmp[sx + nx][sy + ny] = grid[sx + i][sy+j];
-        }
-    }
+pair<int, int> rotate(int x, int y, int rot, bool reset){
+    int sx = x/4 * 4, sy = y/4 * 4;
     
-    keep = x;
-    x = y;
-    y = sx + 4 - 1 - keep;
+    int nx = x, ny = y;
+    int lx, ly;
 
-    return {x, y};
-}
+    if(rot == 0){
+        for(int i = sx; i < sx+4; i++){
+            for(int j = sy; j < sy+4; j++){
+                grid_rot[i][j] = grid[i][j];
+            }
+        }
 
-pair<int, int> rotation180(int x, int y){
-    int pl_x, pl_y, keep;
-    pl_x = x/4;
-    pl_y = y/4;
+        if(reset == true){
+            nx = y;
+            ny = sx + 4 - 1 - x%4;
+        }
+    }
+    else if (rot == 1){
+        for(int i = sx; i < sx+4; i++){
+            for(int j = sy; j < sy+4; j++){
+                lx = i - sx;
+                ly = j - sy;
 
-    int sx = pl_x * 4;
-    int sy = pl_y * 4;
+                nx = ly;
+                ny = 3 - lx;
+                grid_rot[sx + nx][sy+ ny] = grid[i][j];
+            }
+        }
+    }
+    else if (rot == 2){
+        for(int i = sx; i < sx+4; i++){
+            for(int j = sy; j < sy+4; j++){
+                lx = i - sx;
+                ly = j - sy;
 
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            int nx = 4 - 1 - i;
-            int ny = 4 - 1 - j;
+                nx = 3 - lx;
+                ny = 3 - ly;
 
-            tmp[sx + nx][sy + ny] = grid[sx + i][sy+j];
+                grid_rot[sx+ nx][sy+ ny] = grid[i][j];
+            }
+        }
+    }
+    else if (rot == 3){
+        for(int i = sx; i < sx+4; i++){
+            for(int j = sy; j < sy+4; j++){
+
+                lx = i - sx;
+                ly = j - sy;
+
+                nx = 3 - ly;
+                ny = lx;
+
+                grid_rot[sx+ nx][sy + ny] = grid[i][j];
+            }
         }
     }
 
-    keep = x;
-    x = sx + 4 - 1 - x;
-    y = sy + 4 - 1 - keep;
+    cout << "여기보세요" << rot;
 
-    return {x, y};
+    for(int i = 0; i<4*K;i++){
+        for(int j = 0; j <4*K;j++){
+            cout << grid_rot[i][j];
+        } cout << "\n";
+    } cout << "\n";
+    
+    return {sx + nx, sy + ny};
 }
 
-pair<int, int> rotation270(int x, int y){
-    int pl_x, pl_y, keep;
-    pl_x = x/4;
-    pl_y = y/4;
+int move(int sx, int sy){
 
-    int sx = pl_x * 4;
-    int sy = pl_y * 4;
-
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            int nx = 4 - 1- j;
-            int ny = i;
-
-            tmp[sx + nx][sy + ny] = grid[sx + i][sy+j];
-        }
-    }
-
-    keep = x;
-    x = sy + 4 - 1 - y;
-    y = keep;
-
-    return {x, y};
-}
-
-int move(){
+    q.push({sx, sy, 0, 1, false});
+    visited[sx][sy][0] = true;
 
     while(!q.empty()){
         int cx = q.front().x;
         int cy = q.front().y;
-        int ct = q.front().t;
         int cr = q.front().rot;
-        int cpla_x, cpla_y;
-        cpla_x = q.front().plate.first;
-        cpla_y = q.front().plate.second;
-
-        ct++;
-
+        int ct = q.front().dist;
+        bool start = q.front().reset;
         q.pop();
-
-        //cout << "X&Y = " << cx << "/" << cy << "/" << cr << "\n";
-
-        for(int i = 0; i < 4*K; i++){
-                for(int j = 0; j < 4*K; j++){
-                    tmp[i][j] = grid[i][j]; 
-                }
-            }
-
-        if (cr == 0 && start == true){
-            int keep = cx;
-            cx = cy;
-            cy = cx/4*4 + 4 - 1 - keep;
-        }
-        else if(cr == 1){
-            pair<int,int> cur = rotation90(cx, cy);
-            cx = cur.first;
-            cy = cur.second;
-        }
-        else if(cr == 2){
-            pair<int,int> cur = rotation180(cx, cy);
-            cx = cur.first;
-            cy = cur.second;
-        }
-        else if(cr == 3){
-            pair<int,int> cur = rotation270(cx, cy);
-            cx = cur.first;
-            cy = cur.second;
-        }
-
-        //cout << "X&Y = " << cx << "/" << cy << "/" << cr << "\n";
+ 
+        auto[rx, ry] = rotate(cx, cy, cr, start);
+        cout << "HERE : " << cx << "/" << cy << "/" << cr << "/" << start << "\n";
         
-        cr = (cr + 1)%4;
+        if(grid_rot[rx][ry] == 'E'){
+            cout << ct << "\n";
+            return 0;
+        }
+    
+        int nrot = (cr+1)%4;
+        if(cx/4 != rx/4 || cy/4 != ry/4){
+            nrot = 0;
+            start = false;
+        }
+        else if(cr%4 == 0 && start == false) {
+            start = true;
+        }
 
         for(int i = 0; i < 5; i++){
             int nx = cx + dx[i];
@@ -153,28 +132,22 @@ int move(){
             if(nx < 0 || ny < 0 || nx >= 4*K || ny >= 4*K){
                 continue;
             }
-            else if(tmp[nx][ny] == '#'){
+
+            auto[rx2, ry2] = rotate(nx, ny, nrot, start);
+            cout << "HERE : " << cx << "/" << cy << "/" << cr << "/" << start << "\n" << "\n";
+            if(grid_rot[rx2][ry2] == '#'){
                 continue;
             }
-            else if(tmp[nx][ny] == 'E'){
-                cout << ct << "\n";
-                return 0;
-            }
-            else{
-                if (cx/4 != nx/4 || cy/4 != ny/4){
-                    cr = 0;
-                }
-                q.push({nx, ny, ct, cr});
-                cout << "X&Y = " << nx << "/" << ny << "/" << ct << "/" << cr << "\n";
+
+            if(!visited[nx][ny][nrot]){
+                visited[nx][ny][nrot] = true;
+                q.push({nx, ny, nrot, ct+1, start});
             }
         }
-
-        start = true;
     }
-
-    cout << "-1" << "\n";
     return 0;
 }
+
 
 int main(){
     ios::sync_with_stdio(false);
@@ -187,6 +160,7 @@ int main(){
     cin >> K;
 
     string line;
+    int startx, starty;
 
     for(int i = 0; i < 4*K; i++){
         cin >> line;
@@ -196,27 +170,15 @@ int main(){
             c = line[j];
 
             grid[i][j] = c;
-            tmp[i][j] = c;
 
-            if(c == 'S'){
-                q.push({i,j,0,0});
+            if(grid[i][j] == 'S'){
+                startx = i;
+                starty = j;
             }
         }
     }
 
-    int ans = move();
-
-    /*
-    //rotation180(5,6);
-
-    for(int i = 0; i < 4*K; i++){
-        for(int j = 0; j < 4*K; j++){
-            cout << tmp[i][j] << " ";   
-        }
-
-        cout << "\n";
-    }*/
-
+    move(startx, starty);
 
     return 0;    
 }
