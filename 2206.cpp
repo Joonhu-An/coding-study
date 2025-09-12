@@ -11,12 +11,10 @@ using namespace std;
 
 int N, M, minDist = INT_MAX;
 int grid[1000][1000];
-int visited[1000][1000];
-bool falseVisited[1000][1000];
+int visited[1000][1000][2];
 
 struct Two{
-    int x, y, dist;
-    bool already;
+    int x, y, dist, broken;
 };
 
 queue<Two> q;
@@ -26,22 +24,21 @@ int dy[4] = {0, 1, 0, -1};
 
 int move(){
 
-    fill(&visited[0][0], &visited[0][0] + 1000*1000, -1);
-    fill(&falseVisited[0][0], &falseVisited[0][0] + 1000*1000, false);
+    fill(&visited[0][0][0], &visited[0][0][0] + 1000*1000*2, 0);
 
-    q.push({0,0,1, false});
+    q.push({0,0,0,0});
     int a = 0;
 
     while(!q.empty()){
         auto cur = q.front();
-        int cx = cur.x, cy = cur.y, cd = cur.dist, cb = cur.already;
+        int cx = cur.x, cy = cur.y, cd = cur.dist, cb = cur.broken;
         q.pop();
 
         for(int i = 0; i < 4; i++){
             int nx = cx + dx[i];
             int ny = cy + dy[i];
             int nd = cd;
-            bool nb = cb;
+            int nb = cb;
 
             if(nx < 0 || ny < 0 || nx >= N || ny >= M){continue;}
             
@@ -50,24 +47,23 @@ int move(){
                 return minDist;
             }
 
-            if(nb == false && grid[nx][ny] == 1){
-                nb = true;
+            if(nb == 0 && grid[nx][ny] == 1){
+                nb = 1;
                 visited[nx][ny] = nd+1;
                 q.push({nx, ny, nd+1, nb});
                 continue;
             }
-            else if (nb == true && grid[nx][ny] == 1){continue;}
+            else if (nb == 1 && grid[nx][ny] == 1){continue;}
 
-            if(visited[nx][ny] == -1){
-                visited[nx][ny] = nd+1;
+            if(visited[nx][ny] == 0){
+                visited[nx][ny][nb] = nd+1;
                 q.push({nx, ny, nd+1, nb});
             }
-            else if(visited[nx][ny] > nd + 1){
-                visited[nx][ny] = nd+1;
+            else if(visited[nx][ny][nb] > nd + 1){
+                visited[nx][ny][nb] = nd+1;
                 q.push({nx, ny, nd+1, nb});
             }  
-            else if(!falseVisited[nx][ny] && nb == false){
-                falseVisited[nx][ny] == true;
+            else if(nb == 0){
                 q.push({nx, ny, nd+1, nb});
             }
             //cout << nx << "/" << ny << "/" << nb << "\n";
