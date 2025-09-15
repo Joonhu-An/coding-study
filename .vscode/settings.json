@@ -9,6 +9,7 @@
         "xstring": "cpp",
         "algorithm": "cpp",
         "utility": "cpp",
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "ios": "cpp"
     }
 }
